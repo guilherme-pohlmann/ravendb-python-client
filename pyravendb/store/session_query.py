@@ -103,6 +103,15 @@ class Query(object):
     def __str__(self):
         return self._build_query()
 
+    def to_list(self):
+        return list(self._execute_query())
+
+    def first(self):
+        return next(self.to_list())
+
+    def first_or_none(self):
+        return next(self.to_list(), None)
+
     def _process_query_parameters(self, index_name, collection_name):
         if index_name and collection_name:
             raise InvalidOperationException(
@@ -770,24 +779,21 @@ class Query(object):
         return self.session.requests_executor.execute(command)
 
     def get_index_query(self):
-        return IndexQuery(query=self.__str__(), query_parameters=self.query_parameters, start=self.start,
+        return IndexQuery(query=str(self), query_parameters=self.query_parameters, start=self.start,
                           page_size=self.page_size, cutoff_etag=self.cutoff_etag,
                           wait_for_non_stale_results=self.wait_for_non_stale_results,
                           wait_for_non_stale_results_timeout=self.timeout)
 
     def _execute_query(self):
-        conventions = self.session.conventions
         end_time = time.time() + self.timeout.seconds
-        query = self._build_query()
+
         while True:
-            index_query = IndexQuery(query=query, query_parameters=self.query_parameters, start=self.start,
-                                     page_size=self.page_size, cutoff_etag=self.cutoff_etag,
-                                     wait_for_non_stale_results=self.wait_for_non_stale_results,
-                                     wait_for_non_stale_results_timeout=self.timeout)
+            index_query = self.get_index_query()
 
             query_command = QueryOperation(session=self.session, index_name=self.index_name,
                                            index_query=index_query,
                                            metadata_only=self.metadata_only).create_request()
+
             response = self.session.requests_executor.execute(query_command)
             if response is None:
                 return []
