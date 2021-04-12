@@ -104,12 +104,22 @@ class Query(object):
         return self._build_query()
 
     def to_list(self):
+        """
+          Executes the query on the server and return a list of results
+        """
         return list(self._execute_query())
 
     def first(self):
+        """
+          Executes the query on the server and get the first element of the results list
+          raising StopIteration if empty
+        """
         return next(self.to_list())
 
     def first_or_none(self):
+        """
+          Executes the query on the server and get the first element of the results list or None if empty
+        """
         return next(self.to_list(), None)
 
     def _process_query_parameters(self, index_name, collection_name):

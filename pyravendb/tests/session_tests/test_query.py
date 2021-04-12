@@ -218,6 +218,18 @@ class TestQuery(TestBase):
                 self.assertEqual(len(result), 1)
                 self.assertTrue("order_and_id" in result)
 
+    def test_to_list(self):
+        with self.store.open_session() as session:
+            query_results = session.query(collection_name="products").where_not_none("order").to_list()
+
+            self.assertEqual(len(query_results), 4)
+            self.assertTrue(isinstance(query_results, list))
+
+    def test_first(self):
+        with self.store.open_session() as session:
+            query_results = session.query(collection_name="products").where_not_none("order").first()
+
+            self.assertTrue(isinstance(query_results, Product))
 
 if __name__ == "__main__":
     unittest.main()
